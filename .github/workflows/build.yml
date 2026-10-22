@@ -21,7 +21,10 @@ jobs:
           echo "USING: $best"
           rm -rf juttrunner
           unzip -q "$best"
+          echo "VERSION MARKER COUNT (must be 1):"
           grep -c "v0.2 neon build" juttrunner/scripts/ui/main_menu.gd
+          sed -i 's/com.juttrunner.game/com.juttrunner.neon/; s/package\/name="JUTTRUNNER"/package\/name="JUTTRUNNER NEON"/' juttrunner/export_presets.cfg
+          grep -n "unique_name\|package/name" juttrunner/export_presets.cfg
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -44,5 +47,5 @@ jobs:
         run: bash tools/export_android.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: JUTTRUNNER-debug-apk
+          name: JUTTRUNNER-NEON-apk
           path: juttrunner/build/JUTTRUNNER-debug.apk
