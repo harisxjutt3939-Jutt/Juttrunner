@@ -1,0 +1,36 @@
+name: Build APK
+on: workflow_dispatch
+env:
+  GODOT_VERSION: "4.3"
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unzip project
+        run: unzip -q JUTTRUNNER_godot_project.zip
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - name: Install Godot and export templates
+        run: |
+          curl -L -o godot.zip https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          curl -L -o tpl.tpz https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          unzip -q godot.zip
+          sudo mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          unzip -q tpl.tpz -d /tmp/tpl
+          mv /tmp/tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+      - name: Configure Android
+        working-directory: juttrunner
+        run: ANDROID_SDK_ROOT=$ANDROID_HOME GODOT_VERSION=${GODOT_VERSION} bash tools/setup_android_env.sh
+      - name: Export APK
+        working-directory: juttrunner
+        run: bash tools/export_android.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JUTTRUNNER-debug-apk
+          path: juttrunner/build/JUTTRUNNER-debug.apk
