@@ -7,8 +7,21 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Unzip project
-        run: unzip -q JUTTRUNNER_godot_project.zip
+        with:
+          fetch-depth: 0
+      - name: Unzip newest project zip
+        run: |
+          best=""
+          bt=0
+          for f in ./*.zip; do
+            t=$(git log -1 --format=%ct -- "$f")
+            echo "found $f (commit time $t)"
+            if [ "$t" -gt "$bt" ]; then bt=$t; best="$f"; fi
+          done
+          echo "USING: $best"
+          rm -rf juttrunner
+          unzip -q "$best"
+          grep -c "v0.2 neon build" juttrunner/scripts/ui/main_menu.gd
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
